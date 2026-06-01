@@ -9,12 +9,28 @@
             src: url("moonlight.woff2");
         }
 
+        @font-face {
+        font-family: 'Myfont';
+        src: url('font/alex-brush/AlexBrush-Regular.ttf') format('truetype');
+        }
+
+        @font-face {
+        font-family: 'Myfont2';
+        src: url('font/live-love-bt.regular.ttf') format('truetype');
+        }
         h1 {
-            color: rgb(225, 25, 25);
-            font-family: Moonlight;
+            color: rgb(203, 47, 47);
+            font-family: "Myfont";
             font-size: 300%;
             text-align: center;
         }
+           h5{
+            color: rgb(198, 82, 82);
+            font-family: "Myfont2";
+            font-size: 150%;
+            text-align: center;
+        }
+
 
         body {
             background-color: pink;
@@ -25,17 +41,20 @@
 <body>
 
     <h1>
-        Hi My LOVE <br>
-        Happy 3 years of Us
+        Happy 3 years of Us<br>
+        <h5>~with love🩷
+             kittu~</h5>
     </h1>
+    
+<div style="display:flex; justify-content:center;">
+    <img src="extra/GIF.webp" alt="Isn't this us.." width="300">
+</div>
 
-    <div style="display:flex; justify-content:center;">
-        <img src="my baby.webp" alt="Isn't this us.." width="300">
-    </div>
-    <a href="page2.html">
+<div style="display:flex; justify-content:center; margin-top:20px;">
     <a href="page2.html" style="text-decoration:none;">
-    <button class="love-btn">🫶click me🫶</button>
-</a>
+        <button class="love-btn">🫶click me🫶</button>
+    </a>
+</div>
 
 <style>
 .love-btn {
