@@ -1,76 +1,168 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Everything You've Ever Made Me Feel</title>
 
-<title>Everything You've Ever Made Me Feel</title>
+  <style>
 
-<style>
-
-body{
-    margin:0;
-    padding:0;
-    font-family: Georgia, serif;
-    background-color:#f5ebf5;
-}
-
-.journal-page{
-    background-image:url("extra/desktop_note1.png");
-    background-size:cover;
-    background-position:center;
-    min-height:100vh;
-}
-
-/* Phone */
-@media (max-width: 768px){
-
-    .journal-page{
-        background-image:url("extra/phone_note1.png");
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
     }
 
-}
+    /* ── html and body fill exactly the viewport, no scrolling on body ── */
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
 
-.content{
-    max-width:900px;
-    margin:auto;
+    /* ── Background fixed to viewport, never scrolls, never repeats ── */
+    body {
+      background-image: url('extra/desktop_note1.png');
+      background-size: cover;
+      background-position: center center;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+    }
 
-    font-size:1.2rem;
-    line-height:2;
+    @media (max-width: 640px) {
+      body {
+        background-image: url('extra/phone_note1.png');
+      }
+    }
 
-    color:#2d2d2d;
-}
+    /* ── Outer shell: full viewport, no scroll ── */
+    .outer {
+      width: 100%;
+      height: 100%;
+      position: relative;
+    }
 
-h1{
-    text-align:center;
-    margin-bottom: 3%;
-}
+    /* ── Content box: positioned over the parchment area
+          Uses % so it scales with any window size.
+          Coordinates from your 1588x919 screen:
+            left:   387/1588 = 24.4%
+            top:    141/919  = 15.3%
+            width:  741/1588 = 46.7%
+            height: 496/919  = 53.9%  (637-141)
+          overflow-y: auto → scrollbar appears inside the box
+          overflow-x: hidden → never overflows sideways
+    ── */
+    .content-box {
+      position: absolute;
+      left: 24.4%;
+      top: 15.3%;
+      width: 46.7%;
+      height: 53.9%;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 10px 16px;
+      background: transparent;
 
-p{
-    margin-bottom:0%;
-}
+      /* hide scrollbar visually but keep it functional */
+      scrollbar-width: thin;
+      scrollbar-color: rgba(180,100,80,0.3) transparent;
+    }
 
-a{
-    color:#7a4d2e;
-    text-decoration:none;
-    font-weight:bold;
-}
+    .content-box::-webkit-scrollbar {
+      width: 4px;
+    }
+    .content-box::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .content-box::-webkit-scrollbar-thumb {
+      background: rgba(180,100,80,0.35);
+      border-radius: 4px;
+    }
 
-a:hover{
-    text-decoration:underline;
-}
+    /* Mobile */
+    @media (max-width: 640px) {
+      .content-box {
+        left: 5%;
+        top: 10%;
+        width: 90%;
+        height: 75%;
+      }
+    }
 
-</style>
+    /* ── Typography ── */
+    h1 {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: clamp(1.3rem, 3vw, 2rem);
+      font-weight: 700;
+      text-align: center;
+      color: #2b0f0f;
+      margin-bottom: 24px;
+      line-height: 1.25;
+    }
+
+    p {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: clamp(0.88rem, 1.6vw, 1rem);
+      line-height: 1.9;
+      color: #3b1f1f;
+      margin-bottom: 16px;
+    }
+
+    p:last-child { margin-bottom: 0; }
+
+    .bold {
+      font-weight: 700;
+      color: #5c1f1f;
+    }
+
+    a {
+      font-weight: 700;
+      color: #7a3b2e;
+      text-decoration: none;
+      border-bottom: 1.5px dotted #7a3b2e;
+      transition: color 0.2s, border-color 0.2s;
+    }
+
+    a:hover {
+      color: #c0392b;
+      border-color: #c0392b;
+    }
+
+  </style>
 </head>
 <body>
 
-<div class="journal-page">
+  <div class="outer">
+    <div class="content-box">
 
-    <div class="content">
+      <h1>Everything You've Ever Made Me Feel</h1>
+
+      <p>The term "anniversary" sounds too old-fashioned to me. So , Happy 3rd year of our togetherness , of you putting up 
+        with my tantrums , of me crying over how you acted but finally and eventually finding our way back to each other . I 
+        won't complain this time because I have the rest of the year and hopefully rest of our lives for that. Also this took 
+        me way long to build than I thought it would so you better appreciate and be grateful for how amazing your girlfriend is.</p>
+
+       <p> As I was making this , I wanted to add our pictures but realised that we dont click many photos, which is very ironic because 
+        you love clicking photos and I love getting clicked. Anyway , I hope we click many picture when we meet [6.7.26]. </p>
+
+        <p> Although I say everything that crosses my mind (even gibberish) when I'm around you but I still wanted you to have a record of it , of things I say and things I dont.</p>
+
+      <p>There are things I never said, things I should have said, and things
+        I hope you somehow understood anyway.</p>
+
+      <p>Sometimes a song becomes a place. That's why I kept
+        <span class="bold">these songs</span>.</p>
+
+      <p>And then there are all the memories we haven't made yet. You can find them in
+        <a href="#">Future Memories</a>.</p>
+
+      <p>Add your own memories, stories, observations, and clickable links here.
+        The background stays perfectly still while this text scrolls inside
+        the parchment area.
+      </p>
 
     </div>
-
-</div>
+  </div>
 
 </body>
 </html>
