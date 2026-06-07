@@ -20,14 +20,14 @@
             flex-direction: row;
             justify-content: center;
             align-items: center;
-            gap: 30px;
+            gap: 80px;
             flex-wrap: wrap;
             padding: 20px;
         }
 
         .images-container a img {
-            width: 200px;
-            height: 200px;
+            width: 400px;
+            height: 400px;
             object-fit: cover;
             border-radius: 16px;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -40,8 +40,22 @@
         }
     </style>
 </head>
-<body>
+<style>
+        @font-face {
+            font-family: Moonlight;
+            src: url("moonlight.woff2");
+        }
 
+        h1 {
+            color: rgb(228, 102, 126);
+            font-size: 400%;
+            text-align: center;
+        }
+    </style>
+<body>
+    <h1>
+        WHAT DO YOU WANNA DO TODAY?
+    </h1>
     <div class="images-container">
         <a href="note1.html">
             <img src="extra/note1.jpeg" alt="Image 1">
