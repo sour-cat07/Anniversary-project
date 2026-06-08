@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Card Stack</title>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400&display=swap" rel="stylesheet" />
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --card-w: 320px;
+      --card-h: 440px;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #d84f92, #8ce486);
+      font-family: 'DM Sans', sans-serif;
+      user-select: none;
+    }
+
+    h2 {
+      font-family: 'Lora', serif;
+      font-size: 1.1rem;
+      font-weight: 400;
+      color: #9b7b6a;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 40px;
+    }
+
+    /* ── Stack container ── */
+    .stack {
+      position: relative;
+      width: var(--card-w);
+      height: var(--card-h);
+      margin-bottom: 48px;
+    }
+
+    /* ── Individual card ── */
+    .card {
+      position: absolute;
+      inset: 0;
+      width: var(--card-w);
+      height: var(--card-h);
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.13);
+      cursor: grab;
+      transform-origin: bottom center;
+      transition: transform 0.35s cubic-bezier(.22,.68,0,1.2), box-shadow 0.3s;
+      will-change: transform;
+      touch-action: none;
+    }
+
+    .card:active { cursor: grabbing; }
+
+    .card.top {
+      z-index: 10;
+      transform: translateY(0) scale(1) rotate(0deg) !important;
+      box-shadow: 0 16px 48px rgba(0,0,0,0.18);
+    }
+
+    .card.fly-left {
+      transition: transform 0.45s cubic-bezier(.55,0,1,.45), opacity 0.45s;
+      transform: translateX(-140%) rotate(-25deg) !important;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .card.fly-right {
+      transition: transform 0.45s cubic-bezier(.55,0,1,.45), opacity 0.45s;
+      transform: translateX(140%) rotate(25deg) !important;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .card.dragging { transition: none !important; }
+
+    /* ── Card media area (image OR video) ── */
+    .card-media {
+      width: 100%;
+      height: 68%;
+      position: relative;
+      background: #1a1a1a;
+      overflow: hidden;
+    }
+
+    .card-media img,
+    .card-media video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      pointer-events: none;
+    }
+
+    /* ── Music indicator bar at bottom of media ── */
+    .music-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(transparent, rgba(0,0,0,0.55));
+      padding: 18px 14px 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #fff;
+      font-size: 0.75rem;
+      font-weight: 300;
+      letter-spacing: 0.04em;
+    }
+
+    /* animated music note bars */
+    .music-bars {
+      display: flex;
+      align-items: flex-end;
+      gap: 2px;
+      height: 14px;
+    }
+
+    .music-bars span {
+      display: block;
+      width: 3px;
+      background: #fff;
+      border-radius: 2px;
+      animation: none;
+      height: 4px;
+    }
+
+    .card.top .music-bars span { animation: bounce 0.7s ease infinite alternate; }
+    .music-bars span:nth-child(1) { animation-delay: 0s;    height: 6px; }
+    .music-bars span:nth-child(2) { animation-delay: 0.15s; height: 10px; }
+    .music-bars span:nth-child(3) { animation-delay: 0.3s;  height: 7px; }
+    .music-bars span:nth-child(4) { animation-delay: 0.1s;  height: 12px; }
+
+    @keyframes bounce {
+      from { transform: scaleY(0.3); }
+      to   { transform: scaleY(1); }
+    }
+
+    /* ── Card caption ── */
+    .card-caption {
+      background: #fff;
+      padding: 14px 18px 16px;
+      height: 32%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .card-caption .title {
+      font-family: 'Lora', serif;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #2e1a14;
+      margin-bottom: 3px;
+    }
+
+    .card-caption .subtitle {
+      font-size: 0.8rem;
+      font-weight: 300;
+      color: #9b7b6a;
+      margin-bottom: 6px;
+    }
+
+    .card-caption .song-name {
+      font-size: 0.72rem;
+      color: #b89080;
+      font-style: italic;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* ── Swipe hint labels ── */
+    .hint {
+      position: absolute;
+      top: 20px;
+      font-family: 'Lora', serif;
+      font-size: 1.2rem;
+      font-style: italic;
+      font-weight: 600;
+      border: 3px solid;
+      border-radius: 8px;
+      padding: 3px 12px;
+      opacity: 0;
+      transition: opacity 0.12s;
+      pointer-events: none;
+      z-index: 20;
+    }
+    .hint.left  { left: 14px;  color: #e07070; border-color: #e07070; transform: rotate(-8deg); }
+    .hint.right { right: 14px; color: #70b090; border-color: #70b090; transform: rotate(8deg); }
+
+    /* ── Mute button ── */
+    .mute-btn {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      border: none;
+      background: rgba(255,255,255,0.85);
+      box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+      cursor: pointer;
+      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      transition: transform 0.15s;
+    }
+    .mute-btn:hover { transform: scale(1.1); }
+
+    /* ── Buttons ── */
+    .controls {
+      display: flex;
+      gap: 28px;
+    }
+
+    .btn {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      font-size: 1.4rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+      transition: transform 0.15s, box-shadow 0.15s;
+      background: #fff;
+    }
+    .btn:hover  { transform: scale(1.12); box-shadow: 0 8px 24px rgba(0,0,0,0.16); }
+    .btn:active { transform: scale(0.96); }
+    .btn.skip { color: #e07070; }
+    .btn.keep { color: #70b090; }
+
+    /* Autoplay unlock overlay — shown on first visit */
+    .unlock-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(253,246,240,0.92);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      gap: 16px;
+    }
+    .unlock-overlay p {
+      font-family: 'Lora', serif;
+      font-size: 1.1rem;
+      color: #5c3a2e;
+    }
+    .unlock-overlay button {
+      padding: 12px 36px;
+      background: #c08070;
+      color: #fff;
+      border: none;
+      border-radius: 30px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 1rem;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+      transition: background 0.2s;
+    }
+    .unlock-overlay button:hover { background: #a06050; }
+
+    @media (max-width: 400px) {
+      :root { --card-w: 280px; --card-h: 390px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Autoplay unlock (browsers block autoplay until user gesture) -->
+  <div class="unlock-overlay" id="unlockOverlay">
+    <p>♪ This experience has music</p>
+    <button id="unlockBtn">Tap to begin</button>
+  </div>
+
+  <!-- Mute toggle -->
+  <button class="mute-btn" id="muteBtn" title="Mute/Unmute">🔊</button>
+
+  <h2>Swipe to explore</h2>
+
+  <div class="stack" id="stack">
+
+    <!--
+    ═══════════════════════════════════════════════════
+    HOW TO CUSTOMISE EACH CARD:
+
+    IMAGE card  → keep <img>, delete <video>
+    VIDEO card  → keep <video>, delete <img>
+                  video autoplays when it becomes top card
+
+    data-src    → path to your video file  e.g. "videos/clip1.mp4"
+    data-song   → path to your audio file  e.g. "audio/song1.mp3"
+    song-name   → text shown in caption
+    ═══════════════════════════════════════════════════
+    -->
+
+    <!-- CARD 1 — image -->
+    <div class="card"
+         data-song="audio/song1.mp3"
+         data-song-name="Song One · Artist">
+      <div class="hint left">nope</div>
+      <div class="hint right">keep</div>
+      <div class="card-media">
+        <video src="photos and videos/us.mp4" playsinline loop muted preload="metadata" poster="thumbnail.jpg">
+        <div class="music-bar">
+          <div class="music-bars"><span></span><span></span><span></span><span></span></div>
+          <span>Song One · Artist</span>
+        </div>
+      </div>
+      <div class="card-caption">
+        <div class="title">Golden Hour</div>
+        <div class="subtitle">That afternoon light we chased</div>
+        <div class="song-name">♪ Labyrinth · Taylor Swift</div>
+      </div>
+    </div>
+
+    <!-- CARD 2 — video -->
+    <div class="card"
+         data-src="videos/clip1.mp4"
+         data-song="audio/song2.mp3"
+         data-song-name="Song Two · Artist">
+      <div class="hint left">nope</div>
+      <div class="hint right">keep</div>
+      <div class="card-media">
+        <!--
+          Replace src with your video file.
+          The video autoplays (muted by browser rules) — audio
+          comes from the separate <audio> track via data-song.
+          Add poster="thumbnail.jpg" for a preview frame.
+        -->
+        <video src="videos/clip1.mp4"
+               playsinline
+               loop
+               muted
+               preload="metadata"
+               poster="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=640&q=80">
+        </video>
+        <div class="music-bar">
+          <div class="music-bars"><span></span><span></span><span></span><span></span></div>
+          <span>Song Two · Artist</span>
+        </div>
+      </div>
+      <div class="card-caption">
+        <div class="title">Quiet Mornings</div>
+        <div class="subtitle">Coffee and no words needed</div>
+        <div class="song-name">♪ Song Two · Artist</div>
+      </div>
+    </div>
+
+    <!-- CARD 3 — image -->
+    <div class="card"
+         data-song="audio/song3.mp3"
+         data-song-name="Song Three · Artist">
+      <div class="hint left">nope</div>
+      <div class="hint right">keep</div>
+      <div class="card-media">
+        <img src="https://images.unsplash.com/photo-1501854140801-50d01698950b?w=640&q=80" alt="Card 3" />
+        <div class="music-bar">
+          <div class="music-bars"><span></span><span></span><span></span><span></span></div>
+          <span>Song Three · Artist</span>
+        </div>
+      </div>
+      <div class="card-caption">
+        <div class="title">The Long Way Home</div>
+        <div class="subtitle">We always took the scenic route</div>
+        <div class="song-name">♪ Song Three · Artist</div>
+      </div>
+    </div>
+
+    <!-- CARD 4 — image -->
+    <div class="card"
+         data-song="audio/song4.mp3"
+         data-song-name="Song Four · Artist">
+      <div class="hint left">nope</div>
+      <div class="hint right">keep</div>
+      <div class="card-media">
+        <img src="https://images.unsplash.com/photo-1490730141103-6cac27aaab94?w=640&q=80" alt="Card 4" />
+        <div class="music-bar">
+          <div class="music-bars"><span></span><span></span><span></span><span></span></div>
+          <span>Song Four · Artist</span>
+        </div>
+      </div>
+      <div class="card-caption">
+        <div class="title">Somewhere New</div>
+        <div class="subtitle">Every place felt like the first time</div>
+        <div class="song-name">♪ Song Four · Artist</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="controls">
+    <button class="btn skip" id="btnSkip">✕</button>
+    <button class="btn keep" id="btnKeep">♡</button>
+  </div>
+
+  <script>
+    const stack    = document.getElementById('stack');
+    const muteBtn  = document.getElementById('muteBtn');
+    let isMuted    = false;
+    let unlocked   = false;
+
+    // One shared Audio object — swapped per card
+    const audio = new Audio();
+    audio.loop  = true;
+
+    // ── Unlock overlay (browsers need a user gesture before audio) ──
+    document.getElementById('unlockBtn').addEventListener('click', () => {
+      unlocked = true;
+      document.getElementById('unlockOverlay').style.display = 'none';
+      playTopCard();
+    });
+
+    // ── Mute toggle ──
+    muteBtn.addEventListener('click', () => {
+      isMuted      = !isMuted;
+      audio.muted  = isMuted;
+      muteBtn.textContent = isMuted ? '🔇' : '🔊';
+    });
+
+    // ── Get cards (last child = top) ──
+    function getCards() {
+      return Array.from(stack.querySelectorAll('.card'));
+    }
+
+    function getTopCard() {
+      const cards = getCards();
+      return cards[cards.length - 1] || null;
+    }
+
+    // ── Play the audio + video for the current top card ──
+    function playTopCard() {
+      if (!unlocked) return;
+
+      const top = getTopCard();
+      if (!top) return;
+
+      // ── Audio ──
+      const song = top.dataset.song;
+      if (song) {
+        if (audio.src !== new URL(song, location.href).href) {
+          audio.src = song;
+        }
+        audio.muted  = isMuted;
+        audio.currentTime = 0;
+        audio.play().catch(() => {}); // silently ignore if blocked
+      } else {
+        audio.pause();
+      }
+
+      // ── Video ──
+      const video = top.querySelector('video');
+      if (video) {
+        video.currentTime = 0;
+        video.play().catch(() => {});
+      }
+    }
+
+    // ── Pause video on cards that are no longer top ──
+    function pauseAllExceptTop() {
+      const top = getTopCard();
+      getCards().forEach(card => {
+        if (card === top) return;
+        const v = card.querySelector('video');
+        if (v) v.pause();
+      });
+    }
+
+    // ── Update stack visual positions ──
+    function updateStack() {
+      const cards = getCards();
+      const total = cards.length;
+
+      cards.forEach((card, i) => {
+        card.classList.remove('top');
+        const fromTop = total - 1 - i;
+
+        if (fromTop === 0) {
+          card.classList.add('top');
+          card.style.zIndex   = 10;
+          card.style.transform = '';
+        } else if (fromTop === 1) {
+          card.style.zIndex   = 1;
+          card.style.transform = 'translateY(10px) scale(0.96) rotate(2deg)';
+        } else if (fromTop === 2) {
+          card.style.zIndex   = 0;
+          card.style.transform = 'translateY(20px) scale(0.92) rotate(-2.5deg)';
+        } else {
+          card.style.zIndex   = -1;
+          card.style.transform = 'translateY(28px) scale(0.88) rotate(1.5deg)';
+        }
+      });
+
+      pauseAllExceptTop();
+      playTopCard();
+    }
+
+    // ── Send top card to back ──
+    function sendToBack(direction) {
+      const cards = getCards();
+      const top   = cards[cards.length - 1];
+      if (!top) return;
+
+      // Stop this card's video
+      const v = top.querySelector('video');
+      if (v) v.pause();
+
+      top.classList.add(direction === 'left' ? 'fly-left' : 'fly-right');
+
+      setTimeout(() => {
+        top.classList.remove('fly-left', 'fly-right', 'top', 'dragging');
+        top.style.transform  = '';
+        top.style.opacity    = '';
+        top.style.zIndex     = '';
+        top.style.transition = '';
+        top.querySelectorAll('.hint').forEach(h => h.style.opacity = 0);
+
+        stack.insertBefore(top, stack.firstChild);
+        updateStack();
+      }, 460);
+    }
+
+    // ── Buttons ──
+    document.getElementById('btnSkip').addEventListener('click', () => sendToBack('left'));
+    document.getElementById('btnKeep').addEventListener('click', () => sendToBack('right'));
+
+    // ── Drag / swipe ──
+    let startX = 0, startY = 0, currentX = 0, isDragging = false, activeCard = null;
+
+    function onPointerDown(e) {
+      activeCard = getTopCard();
+      if (!activeCard) return;
+      isDragging = true;
+      startX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
+      startY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
+      activeCard.classList.add('dragging');
+    }
+
+    function onPointerMove(e) {
+      if (!isDragging || !activeCard) return;
+      currentX = (e.type === 'touchmove' ? e.touches[0].clientX : e.clientX) - startX;
+      const currentY = (e.type === 'touchmove' ? e.touches[0].clientY : e.clientY) - startY;
+      const rotate   = currentX * 0.07;
+
+      activeCard.style.transform = `translateX(${currentX}px) translateY(${currentY * 0.3}px) rotate(${rotate}deg)`;
+
+      const leftHint  = activeCard.querySelector('.hint.left');
+      const rightHint = activeCard.querySelector('.hint.right');
+      const ratio     = Math.min(Math.abs(currentX) / 80, 1);
+
+      if (currentX < 0) {
+        leftHint.style.opacity  = ratio;
+        rightHint.style.opacity = 0;
+      } else {
+        rightHint.style.opacity = ratio;
+        leftHint.style.opacity  = 0;
+      }
+    }
+
+    function onPointerUp() {
+      if (!isDragging || !activeCard) return;
+      isDragging = false;
+      activeCard.classList.remove('dragging');
+
+      if (Math.abs(currentX) > 80) {
+        sendToBack(currentX < 0 ? 'left' : 'right');
+      } else {
+        activeCard.style.transition = 'transform 0.4s cubic-bezier(.22,.68,0,1.2)';
+        activeCard.style.transform  = '';
+        activeCard.querySelectorAll('.hint').forEach(h => h.style.opacity = 0);
+        setTimeout(() => { if (activeCard) activeCard.style.transition = ''; }, 400);
+      }
+
+      activeCard = null;
+      currentX   = 0;
+    }
+
+    stack.addEventListener('mousedown',  onPointerDown);
+    window.addEventListener('mousemove', onPointerMove);
+    window.addEventListener('mouseup',   onPointerUp);
+    stack.addEventListener('touchstart', onPointerDown, { passive: true });
+    window.addEventListener('touchmove', onPointerMove, { passive: true });
+    window.addEventListener('touchend',  onPointerUp);
+
+    updateStack();
+  </script>
+
+</body>
+</html>
